@@ -1,0 +1,6 @@
+{
+  "_note": "Suggest-an-edit fallback (lib/DwPermissions.php). The per-domain switch in /permissions/ is preferred. brands: brand codes with the editor on; alert_to: fallback notification address.",
+  "brands": [],
+  "staff_brand": "",
+  "alert_to": "__ADMIN_EMAIL__"
+}

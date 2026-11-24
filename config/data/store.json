@@ -1,0 +1,35 @@
+{
+  "_note": "Store defaults. Per-company overrides live in the store_setting table (/store/settings/). No secrets in this file. Entitlement gates are off unless enforce is true. seller_domain is the brand that sells add-ons (your platform domain).",
+  "shipping_flat": "0.00",
+  "free_shipping_over": null,
+  "hi_get_rate": "0.0000",
+  "tax_shipping": false,
+  "hi_states": [
+    "HI",
+    "HAWAII"
+  ],
+  "payment_mode": "offline",
+  "paypal": {
+    "enabled": false,
+    "env": "sandbox",
+    "credentials_dir": "/var/lib/app/data/paypal"
+  },
+  "entitlements": {
+    "_note": "Price and free_count for a gate belong here, not hard-coded. Watermarks: first free_count owner-watermarked public files are free, then price/month.",
+    "gates": {
+      "store": {
+        "enforce": false,
+        "grace_days": 0,
+        "grace_starts": null
+      },
+      "watermark": {
+        "enforce": false,
+        "grace_days": 0,
+        "grace_starts": null,
+        "free_count": 10,
+        "price": "10.00"
+      }
+    },
+    "seller_domain": "__DOMAIN__"
+  }
+}

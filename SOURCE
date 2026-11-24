@@ -1,0 +1,2 @@
+jbrake1/dwalliance adff611705c83e77547f36a3223860482046f4e6 (selfhost-release)
+app/ is that commit unchanged except app/lib/dw_config.php (selfhost/config/dw_config.php).

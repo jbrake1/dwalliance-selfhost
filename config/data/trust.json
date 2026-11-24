@@ -1,0 +1,9 @@
+{
+  "_note": "Signup protection (lib/DwSignup.php, docs/signup-countries.md). tor/vpn/hosting/country lists refresh from cron (dw_iplists.php). After editing, run: dw-run php /opt/dwalliance/current/cli/dw_iplists.php country",
+  "_legal": "NOT LEGAL ADVICE. The default blocked list is a starting point based on US OFAC comprehensive (country/region-wide) sanctions as of November 2026. Syria is not blocked: OFAC ended its comprehensive Syria program on 2025-07-01. Russia and Belarus are under sectoral/list-based sanctions and are deliberately NOT blocked: decide with your own counsel. Geolocation is approximate and there is no SDN name screening.",
+  "signup": {
+    "country": "deny",
+    "blocked_countries": ["CU", "IR", "KP"],
+    "blocked_regions": ["UA:Crimea", "UA:Sebastopol City", "UA:Donetsk", "UA:Luhansk", "RU:Crimea", "RU:Sebastopol City", "RU:Luhansk"]
+  }
+}

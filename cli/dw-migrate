@@ -1,0 +1,16 @@
+#!/bin/bash
+# Apply sql/migrations/NNN_*.sql files that are not yet recorded in dw_schema_migrations. Safe to re-run.
+set -euo pipefail
+. /etc/dwalliance/dwalliance.conf
+SRC_DIR=${DW_SRC_DIR:-/opt/dwalliance/current}
+DB=${DW_DB_NAME:-dwalliance}
+shopt -s nullglob
+for f in "$SRC_DIR"/sql/migrations/[0-9][0-9][0-9]_*.sql; do
+  base=$(basename "$f"); v=${base%%_*}
+  case "$base" in *_down.sql|*_verify.sql) continue ;; esac
+  done_v=$(mysql -N -B "$DB" -e "SELECT 1 FROM dw_schema_migrations WHERE version='$v'")
+  [ -n "$done_v" ] && continue
+  echo "migrate: applying $base"
+  mysql "$DB" < "$f"
+  mysql "$DB" -e "INSERT INTO dw_schema_migrations (version) VALUES ('$v')"
+done

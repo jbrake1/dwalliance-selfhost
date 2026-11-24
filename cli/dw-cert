@@ -1,0 +1,35 @@
+#!/bin/bash
+# Let's Encrypt certificates for the platform and customer domains (HTTP-01 via /var/www/acme).
+#   dw-cert add example.com www.example.com [--email you@example.com]
+#   dw-cert list
+#   dw-cert remove example.com
+# The hosts must already resolve to this server. Renewal runs from certbot's own timer/cron.
+set -euo pipefail
+LIST=/etc/dwalliance/https-domains
+. /etc/dwalliance/dwalliance.conf
+cmd=${1:-}; shift || true
+command -v certbot >/dev/null || { apt-get install -y -q certbot >/dev/null; }
+touch "$LIST"; chmod 644 "$LIST"
+case "$cmd" in
+  add)
+    email=${DW_CERTBOT_EMAIL:-}; hosts=()
+    while [ $# -gt 0 ]; do case "$1" in --email) email=$2; shift ;; *) hosts+=("$1") ;; esac; shift; done
+    [ ${#hosts[@]} -gt 0 ] || { echo "usage: dw-cert add host [host...]" >&2; exit 2; }
+    name=${hosts[0]}; args=()
+    for h in "${hosts[@]}"; do args+=(-d "$h"); done
+    if [ -n "$email" ]; then em=(-m "$email"); else em=(--register-unsafely-without-email); fi
+    mkdir -p /var/www/acme
+    certbot certonly --webroot -w /var/www/acme --cert-name "$name" "${args[@]}" "${em[@]}" --agree-tos --non-interactive --keep-until-expiring
+    grep -v "^$name " "$LIST" > "$LIST.tmp" || true
+    echo "$name ${hosts[*]}" >> "$LIST.tmp"; mv "$LIST.tmp" "$LIST"
+    install -d /etc/letsencrypt/renewal-hooks/deploy
+    printf '#!/bin/sh\nnginx -t -q && (systemctl reload nginx 2>/dev/null || nginx -s reload)\n' > /etc/letsencrypt/renewal-hooks/deploy/dwalliance-nginx
+    chmod 755 /etc/letsencrypt/renewal-hooks/deploy/dwalliance-nginx
+    dw-render-nginx ;;
+  list) cat "$LIST" ;;
+  remove)
+    name=${1:?usage: dw-cert remove certname}
+    grep -v "^$name " "$LIST" > "$LIST.tmp" || true; mv "$LIST.tmp" "$LIST"
+    dw-render-nginx ;;
+  *) echo "usage: dw-cert add|list|remove" >&2; exit 2 ;;
+esac

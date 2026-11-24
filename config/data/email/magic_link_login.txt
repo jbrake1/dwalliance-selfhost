@@ -1,0 +1,9 @@
+Sign in to {{brand_name}}
+
+Use this link to sign in to {{site_url}}:
+
+{{login_url}}
+
+It works once and expires in 15 minutes.
+
+Requested {{requested_at}} from {{request_ip}}. If you did not ask to sign in, you can ignore this email.

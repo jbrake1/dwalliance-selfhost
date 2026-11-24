@@ -1,0 +1,2627 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "DW Alliance affiliate program",
+    "version": "1.1.0",
+    "x-report-schema-version": "affiliate-report/1",
+    "description": "Run a website's affiliate program for the signed-in person. The website (brand) is the host you call; a connection made on another website is refused. Affiliates (affiliate:join) join, manage channels and see their own referrals and commissions; referral codes and links are only ever sent to the affiliate's email. Staff (affiliate:manage) see the program, change commission rates for NEW referrals (0-100%) and file transfer requests; approving a transfer needs affiliate:transfer. Prices, the client discount and add-on plans cannot be changed through this API."
+  },
+  "servers": [
+    {
+      "url": "https://{site}",
+      "variables": {
+        "site": {
+          "default": "dwalliance.com",
+          "description": "The website's own domain"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/affiliate/me/": {
+      "post": {
+        "operationId": "getMyAffiliate",
+        "summary": "My affiliate status",
+        "description": "The signed-in person's affiliate account on this website: joined or not, status, channels, referral counts, the commission percent for new referrals, and the program terms. The referral code and link are never returned; use emailMyReferralLink.",
+        "security": [
+          {
+            "dwOAuth": [
+              "affiliate:join"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "joined": {
+                      "type": "boolean"
+                    },
+                    "affiliate": {
+                      "type": "object"
+                    },
+                    "program": {
+                      "type": "object"
+                    },
+                    "next": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in, or the connection expired or was revoked: ask the person to connect again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed: missing permission (oauth_error insufficient_scope or not_staff), or the connection belongs to a different website (wrong_site).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/affiliate/me/join": {
+      "post": {
+        "operationId": "joinAffiliateProgram",
+        "summary": "Join the affiliate program",
+        "description": "Join (or update name/company). Show the terms from getMyAffiliate first; join only when the person agrees. A first join emails their code and link (mailed=true); never returned here. 402 = the site's add-on is full: tell the person.",
+        "security": [
+          {
+            "dwOAuth": [
+              "affiliate:join"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "first_name": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "last_name": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "company_name": {
+                    "type": "string",
+                    "maxLength": 100
+                  }
+                },
+                "required": [
+                  "first_name",
+                  "last_name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Joined",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "affiliate_id": {
+                      "type": "string"
+                    },
+                    "joined": {
+                      "type": "boolean",
+                      "description": "true on the first join"
+                    },
+                    "mailed": {
+                      "type": "boolean",
+                      "description": "code and link emailed"
+                    },
+                    "login_granted": {
+                      "type": "boolean",
+                      "description": "sign-in right granted by this join"
+                    },
+                    "note": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in, or the connection expired or was revoked: ask the person to connect again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed: missing permission (oauth_error insufficient_scope or not_staff), or the connection belongs to a different website (wrong_site).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "The website's affiliate add-on is full. Tell the person; a site owner must change the plan.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/affiliate/me/send_link": {
+      "post": {
+        "operationId": "emailMyReferralLink",
+        "summary": "Email me my referral link",
+        "description": "Sends the affiliate's referral link and code to their own email address. They are never returned to the assistant: tell the person to check their email.",
+        "security": [
+          {
+            "dwOAuth": [
+              "affiliate:join"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "mailed": {
+                      "type": "boolean"
+                    },
+                    "note": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in, or the connection expired or was revoked: ask the person to connect again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed: missing permission (oauth_error insufficient_scope or not_staff), or the connection belongs to a different website (wrong_site).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/affiliate/me/referrals": {
+      "post": {
+        "operationId": "listMyReferrals",
+        "summary": "List my referrals",
+        "description": "The affiliate's referrals, newest first: date, source, channel type, landing website, commission percent captured, converted or not. No visitor data.",
+        "security": [
+          {
+            "dwOAuth": [
+              "affiliate:join"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100
+                  },
+                  "offset": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Referrals",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "referrals": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in, or the connection expired or was revoked: ask the person to connect again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed: missing permission (oauth_error insufficient_scope or not_staff), or the connection belongs to a different website (wrong_site).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/affiliate/me/commissions": {
+      "post": {
+        "operationId": "getMyCommissionSummary",
+        "summary": "My commission summary",
+        "description": "Commission totals by status (USD) and the percent that applies to new referrals.",
+        "security": [
+          {
+            "dwOAuth": [
+              "affiliate:join"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "by_status": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "total_not_reversed": {
+                      "type": "string"
+                    },
+                    "commission_percent_for_new_referrals": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in, or the connection expired or was revoked: ask the person to connect again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed: missing permission (oauth_error insufficient_scope or not_staff), or the connection belongs to a different website (wrong_site).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/affiliate/me/channel_add": {
+      "post": {
+        "operationId": "addMyChannel",
+        "summary": "Add a channel",
+        "description": "Add a place where the affiliate will share links (type + handle or URL).",
+        "security": [
+          {
+            "dwOAuth": [
+              "affiliate:join"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "description": "Channel type, e.g. website, youtube, instagram, newsletter, other."
+                  },
+                  "handle": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "handle"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Added",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "channel": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in, or the connection expired or was revoked: ask the person to connect again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed: missing permission (oauth_error insufficient_scope or not_staff), or the connection belongs to a different website (wrong_site).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/affiliate/me/channel_update": {
+      "post": {
+        "operationId": "updateMyChannel",
+        "summary": "Change a channel",
+        "description": "Change a channel's type or handle.",
+        "security": [
+          {
+            "dwOAuth": [
+              "affiliate:join"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "affiliate_channel_id": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "handle": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "affiliate_channel_id",
+                  "type",
+                  "handle"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Done",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in, or the connection expired or was revoked: ask the person to connect again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed: missing permission (oauth_error insufficient_scope or not_staff), or the connection belongs to a different website (wrong_site).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/affiliate/me/channel_remove": {
+      "post": {
+        "operationId": "removeMyChannel",
+        "summary": "Remove a channel",
+        "description": "Remove one of the affiliate's channels (ask the person first).",
+        "security": [
+          {
+            "dwOAuth": [
+              "affiliate:join"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "affiliate_channel_id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "affiliate_channel_id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Done",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in, or the connection expired or was revoked: ask the person to connect again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed: missing permission (oauth_error insufficient_scope or not_staff), or the connection belongs to a different website (wrong_site).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/affiliate/join/": {
+      "post": {
+        "operationId": "joinByEmail",
+        "summary": "Join by email (browser flow)",
+        "description": "For a browser or an in-page assistant without a connection: request_verify emails a code and link to the address (never returned); verify with that code sets a join cookie; then save_profile and the channel actions work with that cookie. Connected apps do not need this: use joinAffiliateProgram.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "request_verify",
+                      "verify",
+                      "save_profile",
+                      "add_channel",
+                      "update_channel",
+                      "remove_channel",
+                      "me",
+                      "referrals",
+                      "commission_summary",
+                      "send_my_link"
+                    ]
+                  },
+                  "email": {
+                    "type": "string",
+                    "description": "request_verify"
+                  },
+                  "code": {
+                    "type": "string",
+                    "description": "verify: the code from the email, typed by the person"
+                  },
+                  "first_name": {
+                    "type": "string"
+                  },
+                  "last_name": {
+                    "type": "string"
+                  },
+                  "company_name": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "handle": {
+                    "type": "string"
+                  },
+                  "affiliate_channel_id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Done",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "mailed": {
+                      "type": "boolean"
+                    },
+                    "verified": {
+                      "type": "boolean"
+                    },
+                    "affiliate_id": {
+                      "type": "string"
+                    },
+                    "joined": {
+                      "type": "boolean"
+                    },
+                    "login_granted": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in, or the connection expired or was revoked: ask the person to connect again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed: missing permission (oauth_error insufficient_scope or not_staff), or the connection belongs to a different website (wrong_site).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/affiliate/staff/read": {
+      "post": {
+        "operationId": "readAffiliateProgram",
+        "summary": "Affiliate program overview (staff)",
+        "description": "Program settings, add-on usage (read-only), affiliates (id, name, owner, status, rate override, the percent for new referrals, referral counts) and pending transfer requests. No codes or email addresses.",
+        "security": [
+          {
+            "dwOAuth": [
+              "affiliate:manage"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Overview",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "program": {
+                      "type": "object"
+                    },
+                    "add_on": {
+                      "type": "object"
+                    },
+                    "affiliates": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "pending_transfer_requests": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in, or the connection expired or was revoked: ask the person to connect again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed: missing permission (oauth_error insufficient_scope or not_staff), or the connection belongs to a different website (wrong_site).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/affiliate/staff/default_rate": {
+      "post": {
+        "operationId": "setDefaultCommissionRate",
+        "summary": "Set the default commission rate (staff)",
+        "description": "The website's default commission percent for NEW referrals (0-100). Confirm the number with the person before calling.",
+        "security": [
+          {
+            "dwOAuth": [
+              "affiliate:manage"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "percent": {
+                    "type": [
+                      "number",
+                      "string"
+                    ],
+                    "description": "Percent from 0 to 100 (up to 2 decimals). Applies to NEW referrals only; earlier referrals keep the rate they were captured with."
+                  }
+                },
+                "required": [
+                  "percent"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "percent": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in, or the connection expired or was revoked: ask the person to connect again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed: missing permission (oauth_error insufficient_scope or not_staff), or the connection belongs to a different website (wrong_site).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/affiliate/staff/program_settings": {
+      "post": {
+        "operationId": "updateAffiliateProgramSettings",
+        "summary": "Change program settings (staff)",
+        "description": "Turn the program on or off, change the default commission percent, or set custom terms (empty terms = the standard terms). Only the fields you send change. The client discount and the add-on plan are pricing: they cannot be changed through this API (403).",
+        "security": [
+          {
+            "dwOAuth": [
+              "affiliate:manage"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "program_enabled": {
+                    "type": "boolean"
+                  },
+                  "default_commission_percent": {
+                    "type": [
+                      "number",
+                      "string"
+                    ],
+                    "description": "Percent from 0 to 100 (up to 2 decimals). Applies to NEW referrals only; earlier referrals keep the rate they were captured with."
+                  },
+                  "terms": {
+                    "type": "string",
+                    "maxLength": 20000
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "settings": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in, or the connection expired or was revoked: ask the person to connect again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed: missing permission (oauth_error insufficient_scope or not_staff), or the connection belongs to a different website (wrong_site).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/affiliate/staff/override": {
+      "post": {
+        "operationId": "setAffiliateCommissionOverride",
+        "summary": "Set one affiliate's rate (staff)",
+        "description": "Commission percent for NEW referrals of one affiliate (0-100), or percent \"default\" to go back to the website default.",
+        "security": [
+          {
+            "dwOAuth": [
+              "affiliate:manage"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "affiliate": {
+                    "type": "string",
+                    "description": "affiliate_id from readAffiliateProgram (the affiliate's referral code is also accepted, but never shown by this API)."
+                  },
+                  "percent": {
+                    "type": [
+                      "number",
+                      "string"
+                    ],
+                    "description": "0-100, or \"default\" to clear the override."
+                  }
+                },
+                "required": [
+                  "affiliate",
+                  "percent"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "percent": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in, or the connection expired or was revoked: ask the person to connect again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed: missing permission (oauth_error insufficient_scope or not_staff), or the connection belongs to a different website (wrong_site).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/affiliate/staff/transfer_request": {
+      "post": {
+        "operationId": "requestAffiliateTransfer",
+        "summary": "Request a transfer of an affiliate right (staff)",
+        "description": "Files a PENDING request to move an affiliate right (sale, inheritance, corporate transfer, other) to another person on this website, identified by email. Nothing changes until staff approve it with approveAffiliateTransfer.",
+        "security": [
+          {
+            "dwOAuth": [
+              "affiliate:manage"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "affiliate": {
+                    "type": "string",
+                    "description": "affiliate_id from readAffiliateProgram (the affiliate's referral code is also accepted, but never shown by this API)."
+                  },
+                  "to_email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "enum": [
+                      "sale",
+                      "inheritance",
+                      "corporate_transfer",
+                      "other"
+                    ]
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 2000
+                  },
+                  "effective_at": {
+                    "type": "string",
+                    "description": "Optional date/time, e.g. 2026-12-01"
+                  },
+                  "to_company": {
+                    "type": "string",
+                    "maxLength": 100
+                  }
+                },
+                "required": [
+                  "affiliate",
+                  "to_email",
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "request": {
+                      "type": "object"
+                    },
+                    "note": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in, or the connection expired or was revoked: ask the person to connect again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed: missing permission (oauth_error insufficient_scope or not_staff), or the connection belongs to a different website (wrong_site).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/affiliate/staff/transfer_requests": {
+      "post": {
+        "operationId": "listAffiliateTransferRequests",
+        "summary": "List transfer requests (staff)",
+        "description": "Transfer requests by status (default pending).",
+        "security": [
+          {
+            "dwOAuth": [
+              "affiliate:manage"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "approved",
+                      "rejected",
+                      "cancelled",
+                      "all"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "requests": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in, or the connection expired or was revoked: ask the person to connect again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed: missing permission (oauth_error insufficient_scope or not_staff), or the connection belongs to a different website (wrong_site).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/affiliate/staff/transfer_approve": {
+      "post": {
+        "operationId": "approveAffiliateTransfer",
+        "summary": "Approve a transfer request (staff)",
+        "description": "Approves a pending request: the transfer is recorded with approved_by = the connected staff person and takes effect. Only when the person clearly says to approve this request.",
+        "security": [
+          {
+            "dwOAuth": [
+              "affiliate:transfer"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "request_id": {
+                    "type": "string"
+                  },
+                  "note": {
+                    "type": "string",
+                    "maxLength": 500
+                  }
+                },
+                "required": [
+                  "request_id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Approved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "request": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in, or the connection expired or was revoked: ask the person to connect again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed: missing permission (oauth_error insufficient_scope or not_staff), or the connection belongs to a different website (wrong_site).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/affiliate/staff/transfer_reject": {
+      "post": {
+        "operationId": "rejectAffiliateTransfer",
+        "summary": "Reject a transfer request (staff)",
+        "description": "Rejects a pending request; nothing changes.",
+        "security": [
+          {
+            "dwOAuth": [
+              "affiliate:transfer"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "request_id": {
+                    "type": "string"
+                  },
+                  "note": {
+                    "type": "string",
+                    "maxLength": 500
+                  }
+                },
+                "required": [
+                  "request_id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "request": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in, or the connection expired or was revoked: ask the person to connect again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed: missing permission (oauth_error insufficient_scope or not_staff), or the connection belongs to a different website (wrong_site).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/affiliate/me/report": {
+      "post": {
+        "operationId": "getMyAffiliateReport",
+        "summary": "My affiliate report (JSON)",
+        "description": "Read-only report of the person's own affiliate data: referrals, conversions, commissions, ownership. Amounts are decimal strings in USD, times ISO-8601 UTC. No codes. Page with next_cursor; sync with updated_after.",
+        "security": [
+          {
+            "dwOAuth": [
+              "affiliate:join"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "view": {
+                    "type": "string",
+                    "enum": [
+                      "summary",
+                      "referrals",
+                      "conversions",
+                      "commissions",
+                      "ownership"
+                    ],
+                    "description": "summary (default): totals + groups. referrals, conversions (with masked client and subscription), commissions (ledger), ownership (your transfer history)."
+                  },
+                  "from": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "UTC date YYYY-MM-DD (inclusive)."
+                  },
+                  "to": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "UTC date YYYY-MM-DD (inclusive)."
+                  },
+                  "period": {
+                    "type": "string",
+                    "enum": [
+                      "day",
+                      "week",
+                      "month"
+                    ],
+                    "description": "For group_by period (default month; weeks start Monday; day needs from+to within 366 days)."
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100,
+                    "description": "Rows or groups per page (default 50)."
+                  },
+                  "cursor": {
+                    "type": "string",
+                    "description": "next_cursor from the previous page."
+                  },
+                  "updated_after": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Incremental sync: only rows changed after this ISO-8601 UTC time (lists are ordered by updated_at, then id)."
+                  },
+                  "channel_id": {
+                    "type": "string",
+                    "description": "Only this channel (from getMyAffiliate), or main for the main link."
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "approved",
+                      "paid",
+                      "reversed"
+                    ],
+                    "description": "commissions view only."
+                  },
+                  "converted": {
+                    "type": "boolean",
+                    "description": "referrals view only."
+                  },
+                  "group_by": {
+                    "type": "string",
+                    "enum": [
+                      "period",
+                      "code",
+                      "channel",
+                      "none"
+                    ],
+                    "description": "summary: period (default), code (per referral code: main link or channel, shown by id), channel (type), affiliate (staff only), none."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "schema_version": {
+                      "type": "string",
+                      "const": "affiliate-report/1"
+                    },
+                    "generated_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "view": {
+                      "type": "string"
+                    },
+                    "scope": {
+                      "type": "object"
+                    },
+                    "filters": {
+                      "type": "object"
+                    },
+                    "totals": {
+                      "type": "object"
+                    },
+                    "groups": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "referrals": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "conversions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "commissions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "transfers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "requests": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "affiliate": {
+                      "type": "object"
+                    },
+                    "affiliates": {
+                      "type": "object"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "totals_by_status": {
+                      "type": "object"
+                    },
+                    "next_cursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in, or the connection expired or was revoked: ask the person to connect again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed: missing permission (oauth_error insufficient_scope or not_staff), or the connection belongs to a different website (wrong_site).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/affiliate/me/email_report": {
+      "post": {
+        "operationId": "emailMyAffiliateReport",
+        "summary": "Email me my affiliate report",
+        "description": "Emails the same report as raw JSON (in the body and as a .json attachment) only to the person's own verified email. Takes the same filters. The reply only says it was sent.",
+        "security": [
+          {
+            "dwOAuth": [
+              "affiliate:join"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "view": {
+                    "type": "string",
+                    "enum": [
+                      "summary",
+                      "referrals",
+                      "conversions",
+                      "commissions",
+                      "ownership"
+                    ],
+                    "description": "summary (default): totals + groups. referrals, conversions (with masked client and subscription), commissions (ledger), ownership (your transfer history)."
+                  },
+                  "from": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "UTC date YYYY-MM-DD (inclusive)."
+                  },
+                  "to": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "UTC date YYYY-MM-DD (inclusive)."
+                  },
+                  "period": {
+                    "type": "string",
+                    "enum": [
+                      "day",
+                      "week",
+                      "month"
+                    ],
+                    "description": "For group_by period (default month; weeks start Monday; day needs from+to within 366 days)."
+                  },
+                  "updated_after": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Incremental sync: only rows changed after this ISO-8601 UTC time (lists are ordered by updated_at, then id)."
+                  },
+                  "channel_id": {
+                    "type": "string",
+                    "description": "Only this channel (from getMyAffiliate), or main for the main link."
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "approved",
+                      "paid",
+                      "reversed"
+                    ],
+                    "description": "commissions view only."
+                  },
+                  "converted": {
+                    "type": "boolean",
+                    "description": "referrals view only."
+                  },
+                  "group_by": {
+                    "type": "string",
+                    "enum": [
+                      "period",
+                      "code",
+                      "channel",
+                      "none"
+                    ],
+                    "description": "summary: period (default), code (per referral code: main link or channel, shown by id), channel (type), affiliate (staff only), none."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "schema_version": {
+                      "type": "string"
+                    },
+                    "emailed": {
+                      "type": "boolean"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "view": {
+                      "type": "string"
+                    },
+                    "rows": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "bytes": {
+                      "type": "integer"
+                    },
+                    "truncated": {
+                      "type": "boolean"
+                    },
+                    "note": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in, or the connection expired or was revoked: ask the person to connect again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed: missing permission (oauth_error insufficient_scope or not_staff), or the connection belongs to a different website (wrong_site).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/affiliate/staff/report": {
+      "post": {
+        "operationId": "getAffiliateProgramReport",
+        "summary": "Affiliate program report (staff, JSON)",
+        "description": "Read-only report for this website's program: totals by period, code, channel or affiliate; one affiliate; referral, conversion, commission and transfer lists. Decimal-string USD, ISO-8601 UTC, no codes.",
+        "security": [
+          {
+            "dwOAuth": [
+              "affiliate:manage"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "view": {
+                    "type": "string",
+                    "enum": [
+                      "summary",
+                      "affiliate",
+                      "referrals",
+                      "conversions",
+                      "commissions",
+                      "transfers"
+                    ],
+                    "description": "summary (default, whole program), affiliate (one affiliate, needs affiliate), referrals, conversions, commissions (ledger), transfers (ownership history)."
+                  },
+                  "affiliate": {
+                    "type": "string",
+                    "description": "affiliate_id from readAffiliateProgram (the affiliate's referral code is also accepted, but never shown by this API)."
+                  },
+                  "from": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "UTC date YYYY-MM-DD (inclusive)."
+                  },
+                  "to": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "UTC date YYYY-MM-DD (inclusive)."
+                  },
+                  "group_by": {
+                    "type": "string",
+                    "enum": [
+                      "period",
+                      "code",
+                      "channel",
+                      "affiliate",
+                      "none"
+                    ],
+                    "description": "summary: period (default), code (per referral code: main link or channel, shown by id), channel (type), affiliate (staff only), none."
+                  },
+                  "period": {
+                    "type": "string",
+                    "enum": [
+                      "day",
+                      "week",
+                      "month"
+                    ],
+                    "description": "For group_by period (default month; weeks start Monday; day needs from+to within 366 days)."
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100,
+                    "description": "Rows or groups per page (default 50)."
+                  },
+                  "cursor": {
+                    "type": "string",
+                    "description": "next_cursor from the previous page."
+                  },
+                  "updated_after": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Incremental sync: only rows changed after this ISO-8601 UTC time (lists are ordered by updated_at, then id)."
+                  },
+                  "channel_id": {
+                    "type": "string",
+                    "description": "Only this channel (from getMyAffiliate), or main for the main link."
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "approved",
+                      "paid",
+                      "reversed"
+                    ],
+                    "description": "commissions view only."
+                  },
+                  "converted": {
+                    "type": "boolean",
+                    "description": "referrals view only."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "schema_version": {
+                      "type": "string",
+                      "const": "affiliate-report/1"
+                    },
+                    "generated_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "view": {
+                      "type": "string"
+                    },
+                    "scope": {
+                      "type": "object"
+                    },
+                    "filters": {
+                      "type": "object"
+                    },
+                    "totals": {
+                      "type": "object"
+                    },
+                    "groups": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "referrals": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "conversions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "commissions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "transfers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "requests": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "affiliate": {
+                      "type": "object"
+                    },
+                    "affiliates": {
+                      "type": "object"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "totals_by_status": {
+                      "type": "object"
+                    },
+                    "next_cursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in, or the connection expired or was revoked: ask the person to connect again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed: missing permission (oauth_error insufficient_scope or not_staff), or the connection belongs to a different website (wrong_site).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/affiliate/staff/email_report": {
+      "post": {
+        "operationId": "emailAffiliateProgramReport",
+        "summary": "Email me the program report (staff)",
+        "description": "Emails the same program report as raw JSON (body + .json attachment) only to the signed-in staff member's own verified email on this website. The reply only says it was sent.",
+        "security": [
+          {
+            "dwOAuth": [
+              "affiliate:manage"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "view": {
+                    "type": "string",
+                    "enum": [
+                      "summary",
+                      "affiliate",
+                      "referrals",
+                      "conversions",
+                      "commissions",
+                      "transfers"
+                    ],
+                    "description": "summary (default, whole program), affiliate (one affiliate, needs affiliate), referrals, conversions, commissions (ledger), transfers (ownership history)."
+                  },
+                  "affiliate": {
+                    "type": "string",
+                    "description": "affiliate_id from readAffiliateProgram (the affiliate's referral code is also accepted, but never shown by this API)."
+                  },
+                  "from": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "UTC date YYYY-MM-DD (inclusive)."
+                  },
+                  "to": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "UTC date YYYY-MM-DD (inclusive)."
+                  },
+                  "group_by": {
+                    "type": "string",
+                    "enum": [
+                      "period",
+                      "code",
+                      "channel",
+                      "affiliate",
+                      "none"
+                    ],
+                    "description": "summary: period (default), code (per referral code: main link or channel, shown by id), channel (type), affiliate (staff only), none."
+                  },
+                  "period": {
+                    "type": "string",
+                    "enum": [
+                      "day",
+                      "week",
+                      "month"
+                    ],
+                    "description": "For group_by period (default month; weeks start Monday; day needs from+to within 366 days)."
+                  },
+                  "updated_after": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Incremental sync: only rows changed after this ISO-8601 UTC time (lists are ordered by updated_at, then id)."
+                  },
+                  "channel_id": {
+                    "type": "string",
+                    "description": "Only this channel (from getMyAffiliate), or main for the main link."
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "approved",
+                      "paid",
+                      "reversed"
+                    ],
+                    "description": "commissions view only."
+                  },
+                  "converted": {
+                    "type": "boolean",
+                    "description": "referrals view only."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "schema_version": {
+                      "type": "string"
+                    },
+                    "emailed": {
+                      "type": "boolean"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "view": {
+                      "type": "string"
+                    },
+                    "rows": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "bytes": {
+                      "type": "integer"
+                    },
+                    "truncated": {
+                      "type": "boolean"
+                    },
+                    "note": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in, or the connection expired or was revoked: ask the person to connect again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed: missing permission (oauth_error insufficient_scope or not_staff), or the connection belongs to a different website (wrong_site).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error. `error` says what was wrong; fix it and try again, or tell the person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": "string"
+          },
+          "oauth_error": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "dwOAuth": {
+        "type": "oauth2",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "https://app.dwalliance.com/oauth/authorize/",
+            "tokenUrl": "https://app.dwalliance.com/oauth/token/",
+            "refreshUrl": "https://app.dwalliance.com/oauth/token/",
+            "scopes": {
+              "affiliate:join": "Join the affiliate program, manage your channels, see your referrals and commissions, email you your link",
+              "affiliate:manage": "Staff: manage the affiliate program (rates, settings, transfer requests)",
+              "affiliate:transfer": "Staff: approve or reject affiliate transfer requests"
+            }
+          }
+        }
+      }
+    }
+  }
+}

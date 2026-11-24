@@ -1,0 +1,7 @@
+#!/bin/bash
+# Run a command with the DW Alliance environment (/etc/dwalliance/dwalliance.env) loaded.
+set -a
+# shellcheck disable=SC1091
+. /etc/dwalliance/dwalliance.env
+set +a
+exec "$@"

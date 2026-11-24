@@ -1,0 +1,11 @@
+{
+  "_note": "Banner config (lib/DwBanner.php). The database (app_setting.banner_default) is authoritative; this file is the fallback and the emergency kill switch (enabled:false). No secrets.",
+  "enabled": true,
+  "version": 1,
+  "exempt_hosts": [
+    "__DOMAIN__",
+    "www.__DOMAIN__"
+  ],
+  "skip_path_regex": "~(^|/)checkout(\\.html?|/|$)~i",
+  "seller_domain": "__DOMAIN__"
+}

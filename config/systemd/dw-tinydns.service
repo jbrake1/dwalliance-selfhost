@@ -1,0 +1,17 @@
+[Unit]
+Description=DW Alliance authoritative DNS (tinydns, data from crm.dns)
+Documentation=man:tinydns(8)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# IP, ROOT, UID and GID come from install.sh. tinydns chroots to ROOT and drops to UID/GID.
+EnvironmentFile=/etc/dwalliance/tinydns.env
+ExecStart=/usr/sbin/tinydns
+# tinydns logs every query on stdout; keep only errors.
+StandardOutput=null
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

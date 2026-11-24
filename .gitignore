@@ -1,0 +1,7 @@
+*.log
+*.tmp
+/stage/
+.env
+*.env
+!config/**
+__pycache__/

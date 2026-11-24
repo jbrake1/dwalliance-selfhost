@@ -1,0 +1,8 @@
+{
+  "_note": "Magic-link sign-in (lib/DwLogin.php). mail: smtp sends through the local relay; sink writes to sink_dir only.",
+  "enabled": true,
+  "mail": "smtp",
+  "timezone": "__TZ__",
+  "logo": "cid",
+  "network_block": false
+}

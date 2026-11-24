@@ -1,0 +1,14 @@
+# DW Alliance scheduled jobs (installed by install.sh). Each job loads /etc/dwalliance/dwalliance.env via dw-run.
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+# Remove on-disk brand file copies and sitemap caches when files rows change (short loop, one per host).
+* * * * * root dw-run python3 __SRC__/cli/files_cache_clean.py >> /var/log/dwalliance/files-cache.log 2>&1
+# Apply the HTML cache purge queue and expire old cached pages.
+* * * * * root dw-run php __SRC__/cli/sweep_html_cache.php >> /var/log/dwalliance/html-cache.log 2>&1
+# Rebuild the tinydns data from crm.dns when it changed.
+* * * * * root dw-run php __SRC__/cli/dw-dns-build.php >> /var/log/dwalliance/dns-build.log 2>&1
+# Refresh the signup Tor/VPN/hosting/country lists.
+17 */6 * * * root dw-run php __SRC__/cli/dw_iplists.php >> /var/log/dwalliance/iplists.log 2>&1
+# Back-in-stock emails (hourly) and bounce processing (needs DW_RESTOCK_IMAP_PASSWORD and the restock IMAP settings).
+7 * * * * root dw-run php __SRC__/cli/send_restock.php >> /var/log/dwalliance/restock-send.log 2>&1
+7,22,37,52 * * * * root dw-run php __SRC__/cli/check_bounces.php >> /var/log/dwalliance/restock-bounces.log 2>&1
